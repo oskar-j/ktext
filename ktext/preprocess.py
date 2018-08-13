@@ -243,10 +243,10 @@ class processor(processor_base):
         histdf['cumsum_pct'] = histdf.doc_count.cumsum() / histdf.doc_count.sum()
 
         self.document_length_stats = histdf
-        self.doc_length_huerestic = histdf.query(f'cumsum_pct >= {heuristic}').bin.head(1).values[0]
+        self.doc_length_huerestic = histdf.query('cumsum_pct >= {}'.format(heuristic)).bin.head(1).values[0]
         logging.warning(' '.join(["Setting maximum document length to",
-                                  f'{self.doc_length_huerestic} based upon',
-                                  f'heuristic of {heuristic} percentile.\n',
+                                  '{} based upon'.format(self.doc_length_huerestic),
+                                  'heuristic of {} percentile.\n'.format(heuristic),
                                   'See full histogram by insepecting the',
                                   "`document_length_stats` attribute."]))
         self.padding_maxlen = self.doc_length_huerestic
@@ -276,7 +276,7 @@ class processor(processor_base):
         """
         self.__clear_data()
         now = get_time()
-        logging.warning(f'....tokenizing data')
+        logging.warning('....tokenizing data')
         tokenized_data = self.parallel_process_text(data)
 
         if not self.padding_maxlen:
@@ -286,8 +286,8 @@ class processor(processor_base):
             self.generate_doc_length_stats()
 
         # Learn corpus on single thread
-        logging.warning(f'(1/2) done. {time_diff(now)} sec')
-        logging.warning(f'....building corpus')
+        logging.warning('(1/2) done. {} sec'.format(time_diff(now)))
+        logging.warning('....building corpus')
         now = get_time()
         self.indexer = custom_Indexer(num_words=self.keep_n)
         self.indexer.fit_on_tokenized_texts(tokenized_data)
@@ -298,8 +298,8 @@ class processor(processor_base):
         self.n_tokens = max(self.indexer.word_index.values())
 
         # logging
-        logging.warning(f'(2/2) done. {time_diff(now)} sec')
-        logging.warning(f'Finished parsing {self.indexer.document_count:,} documents.')
+        logging.warning('(2/2) done. {} sec'.format(time_diff(now)))
+        logging.warning('Finished parsing {:,} documents.'.format(self.indexer.document_count))
 
         if return_tokenized_data:
             return tokenized_data
@@ -337,12 +337,12 @@ class processor(processor_base):
         """
         tokenized_data = self.fit(data, return_tokenized_data=True)
 
-        logging.warning(f'...fit is finished, beginning transform')
+        logging.warning('...fit is finished, beginning transform')
         now = get_time()
         indexed_data = self.indexer.tokenized_texts_to_sequences(tokenized_data)
-        logging.warning(f'...padding data')
+        logging.warning('...padding data')
         final_data = self.pad(indexed_data)
-        logging.warning(f'done. {time_diff(now)} sec')
+        logging.warning('done. {} sec'.format(time_diff(now)))
         return final_data
 
     def transform(self, data: List[str]) -> List[List[int]]:
@@ -375,11 +375,11 @@ class processor(processor_base):
         >> pp.transform_parallel(new_docs)
         [[1, 2, 3, 4], [5, 6, 1, 7, 8]]
         """
-        logging.warning(f'...tokenizing data')
+        logging.warning('...tokenizing data')
         tokenized_data = self.parallel_process_text(data)
-        logging.warning(f'...indexing data')
+        logging.warning('...indexing data')
         indexed_data = self.indexer.tokenized_texts_to_sequences(tokenized_data)
-        logging.warning(f'...padding data')
+        logging.warning('...padding data')
         return self.pad(indexed_data)
 
     def pad(self, docs: List[List[int]]) -> List[List[int]]:
